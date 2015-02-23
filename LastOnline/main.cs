@@ -4,6 +4,7 @@ using TShockAPI;
 using TerrariaApi.Server;
 using System.Reflection;
 using TShockAPI.DB;
+using System.Text;
 
 namespace Last_Online
 {
@@ -36,7 +37,7 @@ namespace Last_Online
 
         public override void Initialize()
         {
-            Commands.ChatCommands.Add(new Command("lastonline",Check, "lo"));
+            Commands.ChatCommands.Add(new Command("lastonline.check", Check, "lo"));
         }
 
         private void Check(CommandArgs args)
@@ -55,18 +56,44 @@ namespace Last_Online
             }
             foreach (TSPlayer ts in TShock.Players)
             {
-                if (ts != null)
+                if (ts == null)
+                    continue;
+
+                if (ts.Name == DbUser.Name)
                 {
-                    if (ts.Name == DbUser.Name)
-                    {
-                        args.Player.SendErrorMessage("This player is still online!");
-                        return;
-                    }
+                    args.Player.SendErrorMessage("This player is still online!");
+                    return;
                 }
             }
             TimeSpan t = DateTime.UtcNow.Subtract(DateTime.Parse(DbUser.LastAccessed));
-            args.Player.SendInfoMessage(string.Format("{0} was last online {1} days {2} hours {3} minutes ago.", DbUser.Name, t.Days, t.Hours, t.Minutes));
+            args.Player.SendInfoMessage(string.Format("{0} was last seen online {1} ago", DbUser.Name, GetTimeFormat(t)));
+        }
+
+        public string GetTimeFormat(TimeSpan ts)
+        {
+            StringBuilder sb = new StringBuilder();
+            bool add = false;
+            if (ts.Days > 0)
+            {
+                sb.Append(string.Format("{0} day{1}", ts.Days, ts.Days > 1 ? "s" : ""));
+                add = true;
+            }
+            if (add || ts.Hours > 0)
+            {
+                sb.Append(string.Format("{0}{1} hour{2}", add ? " " : "", ts.Hours, ts.Hours > 1 ? "s" : ""));
+                add = true;
+            }
+            if (add || ts.Minutes > 0)
+            {
+                sb.Append(string.Format("{0}{1} minute{2}", add ? " " : "", ts.Minutes, ts.Minutes > 1 ? "s" : ""));
+                add = true;
+            }
+            if (add || ts.Seconds > 0)
+            {
+                sb.Append(string.Format("{0}{1} second{2}", add ? " " : "", ts.Seconds, ts.Seconds > 1 ? "s" : ""));
+                add = true;
+            }
+            return sb.ToString();
         }
     }
-
 }
