@@ -8,7 +8,7 @@ using System.Text;
 
 namespace Last_Online
 {
-    [ApiVersion(1, 17)]
+    [ApiVersion(1, 18)]
     public class LastOnline : TerrariaPlugin
     {
         public override Version Version
