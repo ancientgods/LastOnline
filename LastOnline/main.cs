@@ -54,19 +54,23 @@ namespace Last_Online
                 args.Player.SendErrorMessage("Player not found! (Doesn't exist? Also Case Sensitivity is important)");
                 return;
             }
-            foreach (TSPlayer ts in TShock.Players)
-            {
-                if (ts == null)
-                    continue;
+            bool online = IsOnline(DbUser.Name);
 
-                if (ts.Name == DbUser.Name)
-                {
-                    args.Player.SendErrorMessage("This player is still online!");
-                    return;
-                }
-            }
             TimeSpan t = DateTime.UtcNow.Subtract(DateTime.Parse(DbUser.LastAccessed));
-            args.Player.SendInfoMessage(string.Format("{0} was last seen online {1} ago", DbUser.Name, GetTimeFormat(t)));
+            string msg = online ? "has been online for":  "was last seen online";
+            args.Player.SendInfoMessage($"{DbUser.Name} {msg} {GetTimeFormat(t)}{(online ? "" : " ago") }.");
+        }
+
+        public bool IsOnline(string name)
+        {
+            for (int i = 0; i < TShock.Players.Length; i++)
+            {
+                if (TShock.Players[i] == null)
+                    continue;
+                if (name == TShock.Players[i].Name)
+                    return true;
+            }
+            return false;
         }
 
         public string GetTimeFormat(TimeSpan ts)
