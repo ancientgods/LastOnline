@@ -5,6 +5,7 @@ using TerrariaApi.Server;
 using System.Reflection;
 using TShockAPI.DB;
 using System.Text;
+using System.Collections.Generic;
 
 namespace Last_Online
 {
@@ -40,11 +41,48 @@ namespace Last_Online
             Commands.ChatCommands.Add(new Command("lastonline.check", Check, "lo"));
         }
 
+        private bool isOnline(string name)
+        {
+            foreach (TSPlayer ts in TShock.Players)
+            {
+                if (ts == null)
+                    continue;
+
+                if (ts.User.Name == name)
+                {
+                   
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private void Check(CommandArgs args)
         {
             if (args.Parameters.Count < 1)
             {
-                args.Player.SendErrorMessage("Invalid syntax! proper syntax: /lo <username>");
+                //   args.Player.SendErrorMessage("Invalid syntax! proper syntax: /lo <username>");
+
+                List<User> users = new UserManager(TShock.DB).GetUsers();
+
+                string output = "";
+                foreach(User u in users)
+                {
+                    TimeSpan time = DateTime.UtcNow.Subtract(DateTime.Parse(u.LastAccessed));
+                    if (isOnline(u.Name))
+                    {
+                        output += string.Format("{0} is online for {1}", u.Name, GetTimeFormat(time));
+                    }
+                    else {
+                        output += string.Format("{0} was last seen online {1} ago", u.Name, GetTimeFormat(time));
+                    }
+
+                    output += "\n";
+                }
+
+                args.Player.SendInfoMessage(output);
+
                 return;
             }
             string name = string.Join(" ", args.Parameters);
@@ -54,17 +92,13 @@ namespace Last_Online
                 args.Player.SendErrorMessage("Player not found! (Doesn't exist? Also Case Sensitivity is important)");
                 return;
             }
-            foreach (TSPlayer ts in TShock.Players)
+            if (isOnline(DbUser.Name))
             {
-                if (ts == null)
-                    continue;
-
-                if (ts.Name == DbUser.Name)
-                {
-                    args.Player.SendErrorMessage("This player is still online!");
-                    return;
-                }
+                args.Player.SendInfoMessage(DbUser.Name + " is still online!");
+                return;
             }
+
+            
             TimeSpan t = DateTime.UtcNow.Subtract(DateTime.Parse(DbUser.LastAccessed));
             args.Player.SendInfoMessage(string.Format("{0} was last seen online {1} ago", DbUser.Name, GetTimeFormat(t)));
         }
