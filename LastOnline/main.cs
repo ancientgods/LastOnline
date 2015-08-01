@@ -59,7 +59,7 @@ namespace Last_Online
                 if (ts == null)
                     continue;
 
-                if (ts.Name == DbUser.Name)
+                if (ts.User.Name == DbUser.Name)
                 {
                     args.Player.SendErrorMessage("This player is still online!");
                     return;
